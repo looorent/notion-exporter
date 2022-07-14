@@ -1,0 +1,37 @@
+plugins {
+    id "java"
+    id "io.quarkus"
+    id "com.github.ben-manes.versions" version "$outdatedVersion"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation (
+            enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"),
+            "io.quarkus:quarkus-container-image-docker",
+            "io.quarkus:quarkus-picocli",
+            "com.github.seratch:notion-sdk-jvm-core:${notionSdkVersion}",
+            "com.github.seratch:notion-sdk-jvm-slf4j:${notionSdkVersion}"
+    )
+    testImplementation "io.quarkus:quarkus-junit5"
+}
+
+group "be.looorent"
+version "0.0.3"
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+compileJava {
+    options.encoding = "UTF-8"
+    options.compilerArgs << "-parameters"
+}
+
+compileTestJava {
+    options.encoding = "UTF-8"
+}

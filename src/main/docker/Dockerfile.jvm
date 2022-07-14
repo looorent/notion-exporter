@@ -1,0 +1,18 @@
+## Runs with run-java.sh (https://github.com/fabric8io-images/run-java-sh/tree/master/fish-pepper/run-java-sh)
+
+FROM registry.access.redhat.com/ubi8/openjdk-17:1.13
+
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
+
+# We make four distinct layers so if there are application changes the library layers can be re-used
+COPY --chown=185 build/quarkus-app/lib/ /deployments/lib/
+COPY --chown=185 build/quarkus-app/*.jar /deployments/
+COPY --chown=185 build/quarkus-app/app/ /deployments/app/
+COPY --chown=185 build/quarkus-app/quarkus/ /deployments/quarkus/
+
+USER 185
+ENV JAVA_OPTS="-Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
+ENV HIDE_CMD_LINE=true
+
+ENTRYPOINT ["/usr/local/s2i/run"]
