@@ -41,18 +41,21 @@ With this command, you can create a document based on these pages, grouped and o
 ### Options
 
 ```
-Usage: notion export-database [-hV] [-d=<databaseId>] [-f=<format>]
-                              [-gp=<groupPropertyName>] [-o=<folderPath>]
-                              [-op=<orderPropertyName>] [-ti=<title>]
-                              [-to=<notionToken>]
+Usage: notion export-database [-hV] [-d=<databaseId>] [-gp=<groupPropertyName>]
+                              [-o=<folderPath>] [-op=<orderPropertyName>]
+                              [-ti=<title>] [-to=<notionToken>] [-f=<formats>[,
+                              <formats>...]]...
 In Notion, a database is basically a collection of pages that have properties.
 With this command, you can create a document based on these pages, grouped and
 ordered.
   -d, --database-id=<databaseId>
                              The Database to export
                                Default:
-  -f, --format=<format>      The output format of the exported document.
-                               Available values: json, md, markdown
+  -f, --format=<formats>[,<formats>...]
+                             The output formats of the exported document.
+                               Multiple values can be provided, separated by a
+                               comma. Each format is outputed in a dedicated
+                               subfolder. Available values: json, md, markdown
                                Default: json
       -gp, --group-property=<groupPropertyName>
                              The exported document contains all the exported
@@ -105,35 +108,40 @@ In Notion, a page can contain a collection of subpages. With this command, you c
 ### Options
 
 ```
-Usage: notion export-page [-hnV] [-f=<format>] [-o=<folderPath>] [-p=<pageId>]
-                          [-to=<notionToken>]
+Usage: notion export-page [-hnV] [-o=<folderPath>] [-p=<pageId>] [-ti=<title>]
+                          [-to=<notionToken>] [-f=<formats>[,<formats>...]]...
 In Notion, a page can contain a collection of subpages. With this command, you
 can create a document based on this hierarchy of pages.
-  -f, --format=<format>    The output format of the exported document.
-                             Available values: json, md, markdown
-                             Default: json
-  -h, --help               Show this help message and exit.
-  -n, --include-nested-pages
-                           Whether the nested pages must be loaded and
-                             exported. If this option is false, only the page
-                             mentioned is exported.
+  -f, --format=<formats>[,<formats>...]
+                             The output formats of the exported document.
+                               Multiple values can be provided, separated by a
+                               comma. Each format is outputed in a dedicated
+                               subfolder. Available values: json, md, markdown
+                               Default: json
+  -h, --help                 Show this help message and exit.
+  -n, --include-nested-pages Whether the nested pages must be loaded and
+                               exported. If this option is false, only the page
+                               mentioned is exported.
   -o, --output-folder=<folderPath>
-                           The path to the output folder. If the folder does
-                             not exist, it is created. Considering this CLI
-                             runs in a Docker container, this option does not
-                             really matter. The important value is the volume
-                             you define when running the CLI with Docker. By
-                             default, you should map the expected output folder
-                             on this default value. For example `-v
-                             /your-folder:/output`
-                             Default: /output
-  -p, --page-id=<pageId>   The Page to export
-                             Default:
+                             The path to the output folder. If the folder does
+                               not exist, it is created. Considering this CLI
+                               runs in a Docker container, this option does not
+                               really matter. The important value is the volume
+                               you define when running the CLI with Docker. By
+                               default, you should map the expected output
+                               folder on this default value. For example `-v
+                               /your-folder:/output`
+                               Default: /output
+  -p, --page-id=<pageId>     The Page to export
+                               Default:
+      -ti, --title=<title>   The title to use in the exported document. When
+                               this property is not defined, the main page's
+                               title is used.
       -to, --notion-token=<notionToken>
-                           The Notion API Token. See Notion's developer
-                             documentation to create a token.
-                             Default:
-  -V, --version            Print version information and exit.
+                             The Notion API Token. See Notion's developer
+                               documentation to create a token.
+                               Default:
+  -V, --version              Print version information and exit.
 ```
 
 

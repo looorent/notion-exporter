@@ -1,35 +1,23 @@
 package be.looorent.notion.core;
 
+import be.looorent.notion.port.Format;
+
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+
+import static java.util.Optional.ofNullable;
 
 public class Asset {
     private final String id;
     private final String name;
-    private transient final Path path;
-    private transient final Path parentFolder;
+    private transient final Map<Format, Path> pathPerFormat;
 
-    public Asset(String id, String name, Path path, Path parentFolder) {
+    public Asset(String id, String name, Map<Format, Path> pathPerFormat) {
         this.id = id;
         this.name = name;
-        this.path = path;
-        this.parentFolder = parentFolder;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Path getPath() {
-        return path;
-    }
-
-    public String getRelativePath() {
-        return parentFolder.relativize(path).toString();
+        this.pathPerFormat = pathPerFormat;
     }
 
     @Override
@@ -47,5 +35,17 @@ public class Asset {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Optional<Path> getPath(Format format) {
+        return ofNullable(format).map(pathPerFormat::get);
     }
 }

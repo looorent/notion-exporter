@@ -1,24 +1,24 @@
 package be.looorent.notion.port;
 
-import java.nio.file.Path;
+import java.util.Collection;
 
 public class NotionDatabase implements NotionDocumentable {
     private final String id;
     private final String title;
     private final String groupPropertyName;
     private final String orderPropertyName;
-    private transient final Path folder;
+    private transient final Collection<OutputFormat> outputs;
 
     public NotionDatabase(String id,
                           String title,
                           String groupPropertyName,
                           String orderPropertyName,
-                          Path folder) {
+                          Collection<OutputFormat> outputs) {
         this.id = id;
         this.title = title;
         this.groupPropertyName = groupPropertyName;
         this.orderPropertyName = orderPropertyName;
-        this.folder = folder;
+        this.outputs = outputs;
     }
 
     @Override
@@ -32,8 +32,8 @@ public class NotionDatabase implements NotionDocumentable {
     }
 
     @Override
-    public Path getOutputFolder() {
-        return folder;
+    public Collection<OutputFormat> getOutputs() {
+        return outputs;
     }
 
     public String getGroupPropertyName() {
@@ -42,10 +42,6 @@ public class NotionDatabase implements NotionDocumentable {
 
     public String getOrderPropertyName() {
         return orderPropertyName;
-    }
-
-    public Path getFolder() {
-        return folder;
     }
 
     public boolean useCustomTitle() {
@@ -80,6 +76,8 @@ public class NotionDatabase implements NotionDocumentable {
         } else {
             text += ", Does not use groups";
         }
+
+        text += ", Formats: " + outputs.stream().map(x -> x.getFormat().getId()).toList();
 
         return text;
     }

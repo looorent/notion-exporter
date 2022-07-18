@@ -26,7 +26,7 @@ public class MarkdownWriter implements DocumentWriter {
     @Override
     public Path write(Document document, Path folder) throws DocumentWriteException {
         var references = createReferences(document);
-        var formatVisitor = new MarkdownVisitor(references);
+        var formatVisitor = new MarkdownVisitor(references, folder);
         document.accept(formatVisitor);
         try (var writer = new FileWriter(folder.resolve(DOCUMENT_FILENAME).toFile(), UTF_8);
              var print = new PrintWriter(writer)) {
@@ -43,7 +43,7 @@ public class MarkdownWriter implements DocumentWriter {
     }
 
     @Override
-    public String getName() {
+    public String getId() {
         return "Markdown";
     }
 
@@ -51,5 +51,10 @@ public class MarkdownWriter implements DocumentWriter {
         var referenceVisitor = new ReferenceVisitor();
         composite.accept(referenceVisitor);
         return referenceVisitor.getReferences();
+    }
+
+    @Override
+    public String toString() {
+        return getId();
     }
 }

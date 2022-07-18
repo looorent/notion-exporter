@@ -5,6 +5,7 @@ import notion.api.v1.model.blocks.TableRowBlock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static be.looorent.notion.adapter.md.MarkdownFormatter.*;
 import static be.looorent.notion.adapter.md.MarkdownLine.emptyLine;
 import static be.looorent.notion.adapter.md.MarkdownLine.mdLine;
+import static be.looorent.notion.port.Format.MARKDOWN;
 import static java.lang.String.join;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
@@ -34,12 +36,14 @@ class MarkdownVisitor implements ChunkVisitor {
     private final ReferenceContainer references;
     private final AtomicInteger indentation;
     private final AtomicInteger headingLevel;
+    private final Path parentFolder;
 
-    public MarkdownVisitor(ReferenceContainer references) {
+    public MarkdownVisitor(ReferenceContainer references, Path parentFolder) {
         this.lines = new ArrayList<>();
         this.indentation = new AtomicInteger(0);
         this.headingLevel = new AtomicInteger(1);
         this.references = references;
+        this.parentFolder = parentFolder;
     }
 
     @Override
@@ -239,9 +243,12 @@ class MarkdownVisitor implements ChunkVisitor {
     @Override
     public void visitBefore(Image image) {
         LOG.debug("Format block {} of type 'image' into Markdown", image.getId());
-        image.getAsset().ifPresentOrElse(asset -> {
+        image.getAsset()
+                .flatMap(asset -> asset.getPath(MARKDOWN))
+                .ifPresentOrElse(path -> {
             var caption = formatCaption(image.getCaption(), IMAGE_NO_CAPTION);
-            addLine(formatImage(caption, asset.getRelativePath()));
+            var relativePath = parentFolder.relativize(path).toString();
+            addLine(formatImage(caption, relativePath));
         }, () -> LOG.warn("No path found for the image block '{}'", image.getId()));
     }
 
@@ -318,7 +325,12 @@ class MarkdownVisitor implements ChunkVisitor {
     public void visitBefore(Pdf pdf) {
         LOG.debug("Format block {} of type 'pdf' into Markdown", pdf.getId());
         var line = pdf.getAsset()
-                .map(asset -> mdLine("["+formatCaption(pdf.getCaption(), PDF_NO_CAPTION)+"]("+asset.getRelativePath()+")"))
+                .flatMap(asset -> asset.getPath(MARKDOWN))
+                .map(path -> {
+                    var caption = formatCaption(pdf.getCaption(), PDF_NO_CAPTION);
+                    var relativePath = parentFolder.relativize(path).toString();
+                    return mdLine("[" + caption + "](" + relativePath + ")");
+                })
                 .orElseGet(() -> {
                     LOG.error("PDF not found for block '{}'", pdf.getId());
                     return emptyLine();

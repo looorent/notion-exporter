@@ -1,21 +1,21 @@
 package be.looorent.notion.port;
 
-import java.nio.file.Path;
+import java.util.Collection;
 
 public class NotionPage implements NotionDocumentable {
     private final String id;
     private final String title;
     private final boolean includeNestedPages;
-    private transient final Path folder;
+    private transient final Collection<OutputFormat> outputs;
 
     public NotionPage(String id,
                       String title,
                       boolean includeNestedPages,
-                      Path folder) {
+                      Collection<OutputFormat> outputs) {
         this.id = id;
         this.title = title;
         this.includeNestedPages = includeNestedPages;
-        this.folder = folder;
+        this.outputs = outputs;
     }
 
     @Override
@@ -28,21 +28,17 @@ public class NotionPage implements NotionDocumentable {
         return title;
     }
 
-    @Override
-    public Path getOutputFolder() {
-        return folder;
-    }
-
     public boolean isIncludeNestedPages() {
         return includeNestedPages;
     }
 
-    public Path getFolder() {
-        return folder;
-    }
-
     public boolean useCustomTitle() {
         return title == null || title.isBlank();
+    }
+
+    @Override
+    public Collection<OutputFormat> getOutputs() {
+        return outputs;
     }
 
     @Override
@@ -59,6 +55,9 @@ public class NotionPage implements NotionDocumentable {
         } else {
             text += ", Exclude nested pages";
         }
+
+        text += ", Formats: " + outputs.stream().map(x -> x.getFormat().getId()).toList();
+
         return text;
     }
 }

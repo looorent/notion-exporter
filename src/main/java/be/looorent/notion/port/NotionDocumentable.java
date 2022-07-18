@@ -1,9 +1,9 @@
 package be.looorent.notion.port;
 
-import java.nio.file.Path;
+import java.util.Collection;
 
 public interface NotionDocumentable {
     String getId();
     String getTitle();
-    Path getOutputFolder();
+    Collection<OutputFormat> getOutputs();
 }

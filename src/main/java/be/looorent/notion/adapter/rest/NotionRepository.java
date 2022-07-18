@@ -99,7 +99,7 @@ class NotionRepository {
         try {
             return of(client.retrievePagePropertyItem(pageId, decodePropertyId(orderPropertyId), null, null))
                     .filter(property -> property.getNumber() != null)
-                    .map(property -> property.getNumber())
+                    .map(PagePropertyItem::getNumber)
                     .map(Number::intValue)
                     .orElseGet(() -> {
                         LOG.warn("Order cannot be found for page with id = '{}'. Property id = '{}'", pageId, orderPropertyId);

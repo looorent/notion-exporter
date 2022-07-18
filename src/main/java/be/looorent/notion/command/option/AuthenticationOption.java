@@ -2,7 +2,7 @@ package be.looorent.notion.command.option;
 
 import picocli.CommandLine.Option;
 
-public class Authentication {
+public class AuthenticationOption {
 
     @Option(names = {"-to", "--notion-token"},
             description = "The Notion API Token. See Notion's developer documentation to create a token.",

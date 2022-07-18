@@ -1,8 +1,7 @@
-package be.looorent.notion.command.option;
+package be.looorent.notion.port;
 
 import be.looorent.notion.adapter.json.JsonWriter;
 import be.looorent.notion.adapter.md.MarkdownWriter;
-import be.looorent.notion.port.DocumentWriter;
 
 import javax.enterprise.context.ApplicationScoped;
 
@@ -22,8 +21,8 @@ public class FormatStrategy {
     public DocumentWriter findDatabaseWriter(Format format) {
         return ofNullable(format)
                 .map(value -> switch (value) {
-                    case json -> jsonWriter;
-                    case markdown, md -> markdownWriter;
+                    case JSON -> jsonWriter;
+                    case MARKDOWN -> markdownWriter;
                     default -> null;
                 })
                 .orElseThrow(() -> new IllegalArgumentException("Format not supported: '" + format + "'"));

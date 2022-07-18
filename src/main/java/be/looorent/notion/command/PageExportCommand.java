@@ -1,21 +1,14 @@
 package be.looorent.notion.command;
 
-import be.looorent.notion.command.option.Authentication;
-import be.looorent.notion.command.option.FormatStrategy;
-import be.looorent.notion.command.option.Output;
+import be.looorent.notion.command.option.AuthenticationOption;
+import be.looorent.notion.command.option.OutputOption;
 import be.looorent.notion.command.option.PageOption;
-import be.looorent.notion.port.DocumentFactory;
-import be.looorent.notion.port.DocumentFactoryException;
-import be.looorent.notion.port.DocumentWriteException;
 import be.looorent.notion.port.NotionPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
-
-import static java.lang.System.exit;
-import static picocli.CommandLine.ExitCode.*;
+import picocli.CommandLine.Option;
 
 @Command(name = "export-page",
         description = "In Notion, a page can contain a collection of subpages. With this command, you can create a document based on this hierarchy of pages.",
@@ -25,60 +18,37 @@ class PageExportCommand implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(PageExportCommand.class);
 
     @Mixin
-    private Authentication authentication = new Authentication();
+    private AuthenticationOption authentication = new AuthenticationOption();
 
     @Mixin
     private PageOption options = new PageOption();
 
     @Mixin
-    private Output output = new Output();
+    private OutputOption output = new OutputOption();
 
-    @CommandLine.Option(names = {"-ti", "--title"},
+    @Option(names = {"-ti", "--title"},
             description = "The title to use in the exported document. " +
                     "When this property is not defined, the main page's title is used.")
     private String title;
 
-    private final DocumentFactory factory;
-    private final FormatStrategy writerStrategy;
+    private final CommandService service;
 
-    public PageExportCommand(DocumentFactory factory,
-                             FormatStrategy writerStrategy) {
-        this.factory = factory;
-        this.writerStrategy = writerStrategy;
+    public PageExportCommand(CommandService service) {
+        this.service = service;
     }
 
     @Override
     public void run() {
-        try {
-            var folder = output.configureOutputFolder();
-            var mainPage = new NotionPage(options.getPageId(), title, options.isIncludeNestedPages(), folder);
-            LOG.info("Exporting page with configuration: {}", mainPage);
-            var writer = writerStrategy.findDatabaseWriter(output.getFormat());
-            LOG.info("Writer selected: {}", writer.getName());
-            var document = factory.create(mainPage, authentication.getNotionToken());
-            var result = writer.write(document, folder);
-            LOG.info("{} groups, {} pages, {} blocks, written to {}", document.getNumberOfGroups(), document.getNumberOfPages(), document.getNumberOfBlocks(), result.toAbsolutePath());
-            exit(OK);
-        } catch (IllegalArgumentException e) {
-            LOG.error("Configuration error", e);
-            exit(USAGE);
-        } catch (DocumentFactoryException e) {
-            LOG.error("Error when reading the datasource", e);
-            exit(SOFTWARE);
-        } catch (DocumentWriteException e) {
-            LOG.error("Error when writing file.", e);
-            exit(SOFTWARE);
-        } catch (Exception e) {
-            LOG.error("An error occurred", e);
-            exit(SOFTWARE);
-        }
+        var page = new NotionPage(options.getPageId(), title, options.isIncludeNestedPages(), output.toOutputFormats());
+        LOG.info("Exporting page with configuration: {}", page);
+        service.export(page, authentication.getNotionToken());
     }
 
-    public Authentication getAuthentication() {
+    public AuthenticationOption getAuthentication() {
         return authentication;
     }
 
-    public void setAuthentication(Authentication authentication) {
+    public void setAuthentication(AuthenticationOption authentication) {
         this.authentication = authentication;
     }
 
@@ -90,11 +60,11 @@ class PageExportCommand implements Runnable {
         this.options = options;
     }
 
-    public Output getOutput() {
+    public OutputOption getOutput() {
         return output;
     }
 
-    public void setOutput(Output output) {
+    public void setOutput(OutputOption output) {
         this.output = output;
     }
 }

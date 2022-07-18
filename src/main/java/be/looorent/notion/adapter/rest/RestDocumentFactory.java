@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.nio.file.Path;
 import java.util.*;
 
 import static java.lang.Boolean.TRUE;
@@ -24,7 +23,6 @@ import static notion.api.v1.model.blocks.BlockType.SyncedBlock;
 
 @ApplicationScoped
 class RestDocumentFactory implements DocumentFactory {
-    private static final String ASSET_FOLDER = "assets";
     private static final Logger LOG = LoggerFactory.getLogger(RestDocumentFactory.class);
 
     private final NotionRepository repository;
@@ -39,10 +37,10 @@ class RestDocumentFactory implements DocumentFactory {
     public Document create(NotionDocumentable configuration, String token) throws DocumentFactoryException {
         var root = fetchRoot(configuration, token);
         var pages = root.loadPages(repository, token);
-        var assetsFolder = configuration.getOutputFolder().resolve(ASSET_FOLDER);
+
         var blocksPerPageId = pages.stream().collect(toMap(PageDetail::getId, page -> fetchBlocksRecursively(page.getId(), root.includesChildPages(), token)));
         var blocks = flattenPages(pages, blocksPerPageId);
-        var assetsPerBlockId = downloadAssets(blocks, configuration.getOutputFolder(), assetsFolder).stream().collect(toMap(Asset::getId, identity()));
+        var assetsPerBlockId = downloadAssets(blocks, configuration.getOutputs()).stream().collect(toMap(Asset::getId, identity()));
         LOG.info("{} assets downloaded", assetsPerBlockId.size());
         var pageTree = createPage(pages, blocksPerPageId, assetsPerBlockId);
         return new Document(root.getId(), root.getTitle(), root.group(pageTree));
@@ -52,13 +50,11 @@ class RestDocumentFactory implements DocumentFactory {
                                            Map<String, List<BlockComposite>> blocksPerPage,
                                            Map<String, Asset> assetsPerBlockId) {
         return pages.stream()
-                .map(page -> {
-                    return new PageComposite(
-                            page,
-                            page.getTitle(),
-                            page.getOrder(),
-                            createComposites(blocksPerPage.getOrDefault(page.getId(), emptyList()), assetsPerBlockId));
-                })
+                .map(page -> new PageComposite(
+                        page,
+                        page.getTitle(),
+                        page.getOrder(),
+                        createComposites(blocksPerPage.getOrDefault(page.getId(), emptyList()), assetsPerBlockId)))
                 .collect(toList());
     }
 
@@ -70,14 +66,14 @@ class RestDocumentFactory implements DocumentFactory {
         return blocks;
     }
 
-    private Collection<Asset> downloadAssets(Collection<BlockComposite> blocks, Path folder, Path assetFolder) {
+    private Collection<Asset> downloadAssets(Collection<BlockComposite> blocks, Collection<OutputFormat> outputs) {
         var assets = new ArrayList<Asset>();
         for (var block : blocks) {
             switch (block.block().getType()) {
-                case Image -> this.assetRepository.downloadAssetIn(block.block().asImage(), assetFolder, folder).ifPresent(assets::add);
-                case PDF -> this.assetRepository.downloadAssetIn(block.block().asPDF(), assetFolder, folder).ifPresent(assets::add);
+                case Image -> this.assetRepository.downloadAssetIn(block.block().asImage(), outputs).ifPresent(assets::add);
+                case PDF -> this.assetRepository.downloadAssetIn(block.block().asPDF(), outputs).ifPresent(assets::add);
             }
-            assets.addAll(downloadAssets(block.children(), folder, assetFolder));
+            assets.addAll(downloadAssets(block.children(), outputs));
         }
         return assets;
     }

@@ -19,7 +19,6 @@ import static be.looorent.notion.adapter.rest.NotionUtils.readTitle;
 import static java.lang.Integer.MAX_VALUE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.groupingBy;
@@ -99,7 +98,7 @@ abstract class Root {
             final var orderSequence = new AtomicInteger(-10000);
             return repository.findPagesInDatabase(getId(), token).stream().map(page -> {
                 var title = repository.findPageTitle(page.getId(), token);
-                var order = ofNullable(orderPropertyId).map(id -> repository.findPageOrder(page.getId(), id, token)).orElseGet(() -> orderSequence.incrementAndGet());
+                var order = ofNullable(orderPropertyId).map(id -> repository.findPageOrder(page.getId(), id, token)).orElseGet(orderSequence::incrementAndGet);
                 var groupId = ofNullable(groupPropertyId).flatMap(id -> repository.findPageGroupId(page.getId(), id, token)).orElse(null);
                 return new PageDetail(page, title, order, groupId);
             }).collect(toList());
